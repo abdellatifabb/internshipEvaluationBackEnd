@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,6 @@ import {
   Briefcase,
   Calendar,
   CheckCircle2,
-  ChevronLeft,
   ClipboardList,
   FileText,
   GraduationCap,
@@ -35,7 +34,7 @@ import {
   ValidationErrors,
 } from "@/type";
 import { sendForm } from "@/backend/evalution/evalution.api";
-import { InternshipSelector } from "./internship-selector";
+import { SelectStagiaire, SelectTutor, SelectStage } from "./select-entities";
 
 // Initialize default form data
 const initialFormData: FormData = {
@@ -45,10 +44,6 @@ const initialFormData: FormData = {
     tutorName: "",
     startDate: "",
     endDate: "",
-    // Add entity IDs
-    stagiaireId: 0,
-    tutorId: 0,
-    stageId: 0,
   },
   projectDetails: {
     projectTheme: "",
@@ -74,12 +69,15 @@ const initialFormData: FormData = {
 };
 
 export default function EvaluationForm() {
-  const [currentPage, setCurrentPage] = useState(0); // Start with 0 for internship selection
+  const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [showErrors, setShowErrors] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const totalPages = 5; // Actual form pages, not including selection
+  const [selectedStagiaireId, setSelectedStagiaireId] = useState("");
+  const [selectedTutorId, setSelectedTutorId] = useState("");
+  const [selectedStageId, setSelectedStageId] = useState("");
+  const totalPages = 5;
 
   // Update form data
   const updateFormData = (
@@ -423,69 +421,27 @@ export default function EvaluationForm() {
 
   const progressPercentage = (currentPage / totalPages) * 100;
 
-  // Handle internship selection
-  const handleInternshipSelection = (data: {
-    studentName: string;
-    companyName: string;
-    tutorName: string;
-    startDate: string;
-    endDate: string;
-    projectTheme: string;
-    objectives: string;
-    stagiaireId: number;
-    tutorId: number;
-    stageId: number;
-  }) => {
-    // Update form data with selected internship info
-    setFormData(prev => ({
-      ...prev,
-      personalInfo: {
-        ...prev.personalInfo,
-        studentName: data.studentName,
-        companyName: data.companyName,
-        tutorName: data.tutorName,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        stagiaireId: data.stagiaireId,
-        tutorId: data.tutorId,
-        stageId: data.stageId
-      },
-      projectDetails: {
-        ...prev.projectDetails,
-        projectTheme: data.projectTheme,
-        objectives: data.objectives
-      }
-    }));
-    
-    // Move to the first form page
-    setCurrentPage(1);
-  };
-
   return (
-    <>
-      {currentPage === 0 ? (
-        <InternshipSelector onSelectionComplete={handleInternshipSelection} />
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <Card className="mb-8 border-none shadow-lg">
-            <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-t-lg">
-              <CardTitle className="text-3xl font-bold">
-                Evaluation Stage Etudiants
-              </CardTitle>
-              <p className="text-xl mt-2 opacity-90">
-                APPRECIATION DU TUTEUR DE STAGE
-              </p>
-            </CardHeader>
+    <form onSubmit={handleSubmit}>
+      <Card className="mb-8 border-none shadow-lg">
+        <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-t-lg">
+          <CardTitle className="text-3xl font-bold">
+            Evaluation Stage Etudiants
+          </CardTitle>
+          <p className="text-xl mt-2 opacity-90">
+            APPRECIATION DU TUTEUR DE STAGE
+          </p>
+        </CardHeader>
 
-          <div className="px-6 pt-4">
-            <div className="flex items-center justify-between mb-2 text-sm text-gray-500">
-              <span>
-                Étape {currentPage} sur {totalPages}
-              </span>
-              <span>{Math.round(progressPercentage)}% complété</span>
-            </div>
-            <Progress value={progressPercentage} className="h-2" />
+        <div className="px-6 pt-4">
+          <div className="flex items-center justify-between mb-2 text-sm text-gray-500">
+            <span>
+              Étape {currentPage} sur {totalPages}
+            </span>
+            <span>{Math.round(progressPercentage)}% complété</span>
           </div>
+          <Progress value={progressPercentage} className="h-2" />
+        </div>
 
         <CardContent className="p-6">
           {showErrors && Object.keys(errors).length > 0 && (
@@ -493,24 +449,16 @@ export default function EvaluationForm() {
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 Veuillez corriger les erreurs ci-dessous avant de continuer.
-              </AlertDescription>
-            </Alert>
-          )}
 
-          {currentPage === 1 && (
-            <PersonalInfoPage
-              data={formData.personalInfo}
-              updateData={(field, value) =>
-                updateFormData("personalInfo", field, value)
-              }
-              errors={errors.personalInfo}
-              showErrors={showErrors}
-            />
-          )}
-          {currentPage === 2 && (
-            <ProjectDetailsPage
-              data={formData.projectDetails}
-              updateData={(field, value) =>
+      <CardContent className="p-6">
+        {showErrors && Object.keys(errors).length > 0 && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Veuillez corriger les erreurs ci-dessous avant de continuer.
+            </AlertDescription>
+          </Alert>
+        )}
                 updateFormData("projectDetails", field, value)
               }
               errors={errors.projectDetails}
@@ -566,25 +514,16 @@ export default function EvaluationForm() {
           )}
 
           <div className="flex justify-between mt-8">
-            {currentPage > 1 ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={prevPage}
-                className="flex items-center"
-              >
-                <ChevronLeft className="mr-2 h-4 w-4" /> Précédent
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCurrentPage(0)}
-                className="flex items-center"
-              >
-                <ChevronLeft className="mr-2 h-4 w-4" /> Retour à la sélection
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={prevPage}
+              disabled={currentPage === 1}
+              className="px-6"
+            >
+              Précédent
+            </Button>
+
             {currentPage === totalPages ? (
               <Button
                 type="submit"
@@ -605,10 +544,8 @@ export default function EvaluationForm() {
             )}
           </div>
         </CardContent>
-          </Card>
-        </form>
-      )}
-    </>
+      </Card>
+    </form>
   );
 }
 
@@ -618,6 +555,12 @@ interface PersonalInfoPageProps {
   updateData: (field: string, value: string) => void;
   errors?: Record<string, string>;
   showErrors: boolean;
+  selectedStagiaireId: string;
+  setSelectedStagiaireId: (id: string) => void;
+  selectedTutorId: string;
+  setSelectedTutorId: (id: string) => void;
+  selectedStageId: string;
+  setSelectedStageId: (id: string) => void;
 }
 
 function PersonalInfoPage({
@@ -625,133 +568,175 @@ function PersonalInfoPage({
   updateData,
   errors,
   showErrors,
+  selectedStagiaireId,
+  setSelectedStagiaireId,
+  selectedTutorId,
+  setSelectedTutorId,
+  selectedStageId,
+  setSelectedStageId,
 }: PersonalInfoPageProps) {
   return (
-    <div className="space-y-8">
-      <div className="flex items-center space-x-2 text-blue-700 mb-4">
-        <User className="h-6 w-6" />
-        <h2 className="text-xl font-semibold">Informations Personnelles</h2>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label
-            htmlFor="student-name"
-            className="text-sm font-medium flex items-center"
-          >
-            <span className="text-red-500 mr-1">*</span>
-            <GraduationCap className="h-4 w-4 mr-2 text-blue-600" />
-            NOM et Prénom du stagiaire
-          </Label>
-          <Input
-            id="student-name"
-            placeholder="Entrez le nom complet"
-            className={`border-gray-300 bg-gray-100 focus:border-blue-500 focus:ring-blue-500 ${
-              showErrors && errors?.studentName ? "border-red-500" : ""
-            }`}
-            value={data.studentName}
-            readOnly
-            disabled
-          />
-          {showErrors && errors?.studentName && (
-            <p className="text-red-500 text-sm mt-1">{errors.studentName}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label
-            htmlFor="company-name"
-            className="text-sm font-medium flex items-center"
-          >
-            <span className="text-red-500 mr-1">*</span>
-            <Briefcase className="h-4 w-4 mr-2 text-blue-600" />
-            Nom de l&apos;entreprise
-          </Label>
-          <Input
-            id="company-name"
-            placeholder="Entrez le nom de l'entreprise"
-            className={`border-gray-300 bg-gray-100 focus:border-blue-500 focus:ring-blue-500 ${
-              showErrors && errors?.companyName ? "border-red-500" : ""
-            }`}
-            value={data.companyName}
-            readOnly
-            disabled
-          />
-          {showErrors && errors?.companyName && (
-            <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label
-            htmlFor="tutor-name"
-            className="text-sm font-medium flex items-center"
-          >
-            <span className="text-red-500 mr-1">*</span>
-            <Users className="h-4 w-4 mr-2 text-blue-600" />
-            NOM et Prénom du tuteur
-          </Label>
-          <Input
-            id="tutor-name"
-            placeholder="Entrez le nom complet"
-            className={`border-gray-300 bg-gray-100 focus:border-blue-500 focus:ring-blue-500 ${
-              showErrors && errors?.tutorName ? "border-red-500" : ""
-            }`}
-            value={data.tutorName}
-            readOnly
-            disabled
-          />
-          {showErrors && errors?.tutorName && (
-            <p className="text-red-500 text-sm mt-1">{errors.tutorName}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm font-medium flex items-center">
-            <span className="text-red-500 mr-1">*</span>
-            <Calendar className="h-4 w-4 mr-2 text-blue-600" />
-            Période du stage
-          </Label>
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <Input
-                type="date"
-                className={`border-gray-300 bg-gray-100 focus:border-blue-500 focus:ring-blue-500 ${
-                  showErrors && errors?.startDate ? "border-red-500" : ""
-                }`}
-                value={data.startDate}
-                readOnly
-                disabled
-              />
-              {showErrors && errors?.startDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>
-              )}
-            </div>
-            <span className="text-gray-500">au</span>
-            <div className="flex-1">
-              <Input
-                type="date"
-                className={`border-gray-300 bg-gray-100 focus:border-blue-500 focus:ring-blue-500 ${
-                  showErrors && errors?.endDate ? "border-red-500" : ""
-                }`}
-                value={data.endDate}
-                readOnly
-                disabled
-              />
-              {showErrors && errors?.endDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-6">
-        <p className="text-sm text-blue-700">
-          Veuillez remplir toutes les informations ci-dessus pour identifier
-          correctement le stage et les parties concernées.
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+        <h3 className="font-medium text-blue-700 flex items-center">
+          <User className="mr-2 h-5 w-5" />
+          Informations personnelles
+        </h3>
+        <p className="text-sm text-gray-600 mt-1">
+          Sélectionnez le stagiaire, le tuteur et le stage pour cette évaluation
         </p>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <SelectStagiaire
+                value={selectedStagiaireId}
+                onChange={(value, stagiaireData) => {
+                  // Store the ID for the select component
+                  setSelectedStagiaireId(value);
+                  
+                  // If we have stagiaire data, use the full name
+                  if (stagiaireData) {
+                    console.log("Selected stagiaire:", stagiaireData);
+                    const fullName = `${stagiaireData.prenom || ''} ${stagiaireData.nom || ''}`.trim();
+                    updateData("studentName", fullName);
+                  } else {
+                    // Clear the field if no stagiaire is selected
+                    updateData("studentName", "");
+                  }
+                }}
+                error={showErrors && errors?.studentName ? errors.studentName : undefined}
+                label="Stagiaire"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <SelectTutor
+                value={selectedTutorId}
+                onChange={(value, tutorData) => {
+                  // Store the ID for the select component
+                  setSelectedTutorId(value);
+                  
+                  // If we have tutor data, use the full name and company
+                  if (tutorData) {
+                    console.log("Selected tutor:", tutorData);
+                    const fullName = `${tutorData.prenom || ''} ${tutorData.nom || ''}`.trim();
+                    updateData("tutorName", fullName);
+                    
+                    // If company name is not already set, use the tutor's company
+                    if (!data.companyName && tutorData.entreprise) {
+                      updateData("companyName", tutorData.entreprise);
+                    }
+                  } else {
+                    // Clear the field if no tutor is selected
+                    updateData("tutorName", "");
+                  }
+                }}
+                error={showErrors && errors?.tutorName ? errors.tutorName : undefined}
+                label="Tuteur"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <SelectStage
+              value={selectedStageId}
+              onChange={(value, stageData) => {
+                // Store the ID for the select component
+                setSelectedStageId(value);
+                
+                // If we have stage data, use it to populate other fields
+                if (stageData) {
+                  console.log("Selected stage:", stageData);
+                  
+                  // Update company name
+                  if (stageData.entreprise) {
+                    updateData("companyName", stageData.entreprise);
+                  }
+                  
+                  // Update project details in the next step
+                  if (stageData.description) {
+                    // This will update the project theme in the next page
+                    updateData("projectTheme", stageData.description);
+                  }
+                  
+                  if (stageData.objectif) {
+                    // This will update the objectives in the next page
+                    updateData("objectives", stageData.objectif);
+                  }
+                } else {
+                  // Clear fields if no stage is selected
+                  updateData("companyName", "");
+                  updateData("projectTheme", "");
+                  updateData("objectives", "");
+                }
+              }}
+              error={showErrors && errors?.companyName ? errors.companyName : undefined}
+              label="Stage"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="start-date"
+                  className="flex items-center text-gray-700"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  <span className="text-red-500 mr-1">*</span>
+                  Date de début
+                </Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${showErrors && errors?.startDate ? "border-red-500" : ""}`}
+                  value={data.startDate}
+                  onChange={(e) => updateData("startDate", e.target.value)}
+                />
+                {showErrors && errors?.startDate && (
+                  <p className="text-red-500 text-sm">{errors.startDate}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="end-date"
+                  className="flex items-center text-gray-700"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  <span className="text-red-500 mr-1">*</span>
+                  Date de fin
+                </Label>
+                <Input
+                  id="end-date"
+                  type="date"
+                  className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${showErrors && errors?.endDate ? "border-red-500" : ""}`}
+                  value={data.endDate}
+                  onChange={(e) => updateData("endDate", e.target.value)}
+                />
+                {showErrors && errors?.endDate && (
+                  <p className="text-red-500 text-sm">{errors.endDate}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

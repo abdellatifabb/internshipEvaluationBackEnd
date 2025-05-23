@@ -72,6 +72,9 @@ export type PersonalInfo = {
   tutorName: string;
   startDate: string;
   endDate: string;
+  stagiaireId: number;
+  tutorId: number;
+  stageId: number;
 };
 
 export type ProjectDetails = {

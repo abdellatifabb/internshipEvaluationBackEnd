@@ -30,6 +30,14 @@ public class EvaluationController {
                 .map(mapper::toDTO)
                 .collect(Collectors.toList());
     }
+    
+    @GetMapping("/appreciation/{appreciationId}")
+    public List<EvaluationDTO> getEvaluationsByAppreciationId(@PathVariable Long appreciationId) {
+        List<Evaluation> evaluations = evaluationService.getEvaluationsByAppreciationId(appreciationId);
+        return evaluations.stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
+    }
 
 //    @PostMapping("/")
 //    public EvaluationDTO createEvaluation(@RequestBody EvaluationDTO evaluationDTO) {

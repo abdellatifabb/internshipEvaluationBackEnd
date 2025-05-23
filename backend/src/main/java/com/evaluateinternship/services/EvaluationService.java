@@ -28,6 +28,10 @@ public class EvaluationService {
         return evaluationRepository.findAll();
     }
     
+    public List<Evaluation> getEvaluationsByAppreciationId(Long appreciationId) {
+        return evaluationRepository.findByAppreciationId(appreciationId);
+    }
+    
     public Optional<Evaluation> getEvaluationById(Long id) {
         return evaluationRepository.findById(id);
     }

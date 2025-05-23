@@ -27,6 +27,10 @@ public class CompetenceService {
         return competenceRepository.findAll();
     }
     
+    public List<Competence> getCompetencesByAppreciationId(Long appreciationId) {
+        return competenceRepository.findByAppreciationId(appreciationId);
+    }
+    
     public Optional<Competence> getCompetenceById(Long id) {
         return competenceRepository.findById(id);
     }

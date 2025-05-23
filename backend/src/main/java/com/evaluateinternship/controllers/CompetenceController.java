@@ -31,6 +31,14 @@ public class CompetenceController {
                 .collect(Collectors.toList());
     }
     
+    @GetMapping("/appreciation/{appreciationId}")
+    public List<CompetenceDTO> getCompetencesByAppreciationId(@PathVariable Long appreciationId) {
+        List<Competence> competences = competenceService.getCompetencesByAppreciationId(appreciationId);
+        return competences.stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
+    }
+    
 //    @PostMapping("/")
 //    public CompetenceDTO createCompetence(@RequestBody CompetenceDTO competenceDTO) {
 //        Competence competence = competenceDTO.toEntity();

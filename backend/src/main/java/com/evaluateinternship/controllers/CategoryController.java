@@ -31,6 +31,14 @@ public class CategoryController {
                 .collect(Collectors.toList());
     }
     
+    @GetMapping("/competence/{competenceId}")
+    public List<CategoryDTO> getCategoriesByCompetenceId(@PathVariable Long competenceId) {
+        List<Category> categories = categoryService.getCategoriesByCompetenceId(competenceId);
+        return categories.stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
+    }
+    
 //    @PostMapping("/")
 //    public CategoryDTO createCategory(@RequestBody CategoryDTO categoryDTO) {
 //        Category category = categoryDTO.toEntity();
